@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>Intersection observer</title>
+	<style>
+		html {
+			height: 100%;
+			font-family: 'helvetica neue', arial, sans-serif;
+		}
+
+		body {
+			position: relative;
+			height: 600px;
+			margin: 0;
+		}
+
+		body > div, body > div p {
+			margin: 5px;
+			padding: 3px;
+		}
+	</style>
+</head>
+
+<body>
+	<p>Mutation experiment :)</p>
+	<form>
+		<button type="button" id="add-child">Add new child</button>
+		<button type="button" id="remove-child">Remove last child</button>
+		<div class="control">
+			<label>add/remove Blue border attr: </label>
+			<input id="blue" type="checkbox" />
+		</div>
+		<div class="control">
+			<label>add/remove Red border attr: </label>
+			<input id="red" type="checkbox" />
+		</div>
+		<div class="control">
+			<label for="type">Use subtree:</label><input id="subtree" type="checkbox" />
+		</div>
+		<div class="control">
+			<label for="type">Use childList:</label><input id="childList" type="checkbox" />
+		</div>
+	</form>
+	<p>Amount of children: <span id="child-amount"></span></p>
+	<div></div>
+	<script>
+		if (window.MutationObserver) {
+			let childAmount = 0;
+			const divElem = document.querySelector('body > div');
+			const childAmountSpan = document.querySelector('#child-amount');
+			const subtreeCheckbox = document.querySelector('#subtree');
+			const childListCheckbox = document.querySelector('#childList');
+			const blueButton = document.querySelector('#blue');
+			const redButton = document.querySelector('#red');
+			const childPlus = document.querySelector('#add-child');
+			const childMinus = document.querySelector('#remove-child');
+
+			const options = {
+				attributes: true
+			}
+
+			const mo = new MutationObserver(entries => {
+				entries.forEach((entry, index) => {
+					console.log(`mutation observer 01 event: ${index}.`, entry);
+					const {
+						target,
+						type,
+						addedNodes,
+						removedNodes,
+						attributeName
+					} = entry
+					if (type === 'childList') {
+						if (addedNodes.length) {
+							childAmount += 1;
+						}
+						if (removedNodes.length) {
+							childAmount -= 1;
+						}
+						childAmountSpan.innerHTML = childAmount;
+					} else if (type === 'attributes') {
+						if (target.getAttribute(attributeName)) {
+							target.style.outline = `1px solid ${attributeName}`;
+						} else {
+							target.style.outline = '';
+						}
+					}
+				})
+			}, options);
+
+			mo.observe(divElem, options);
+
+			childMinus.addEventListener('click', () => {
+				const list = divElem.querySelectorAll('p')
+				if (list.length) {
+					divElem.removeChild(list[list.length - 1]);
+				}
+			})
+
+			childPlus.addEventListener('click', () => {
+				const p = document.createElement('p');
+				p.innerHTML = new Date();
+				divElem.appendChild(p);
+			})
+
+			redButton.addEventListener('change', () => {
+				const id = redButton.getAttribute('id');
+				[divElem, ...divElem.querySelectorAll('p')].forEach((item) => {
+					if (redButton.checked) {
+						item.setAttribute(id, 1);
+					} else {
+						item.removeAttribute(id);
+					}
+				});
+			});
+
+			blueButton.addEventListener('change', () => {
+				const id = blueButton.getAttribute('id');
+				[divElem, ...divElem.querySelectorAll('p')].forEach((item) => {
+					if (blueButton.checked) {
+						item.setAttribute(id, 1);
+					} else {
+						item.removeAttribute(id);
+					}
+				});
+			});
+
+			const onCheckboxChange = () => {
+				mo.disconnect();
+				const newOptions = {
+					attributes: true,
+					subtree: subtreeCheckbox.checked,
+					childList: childListCheckbox.checked,
+				}
+
+				mo.observe(divElem, newOptions);
+			}
+
+			subtreeCheckbox.addEventListener('change', onCheckboxChange);
+			childListCheckbox.addEventListener('change', onCheckboxChange);
+
+		} else {
+			console.log('Resize observer not supported!');
+		}
+	</script>
+</body>
+
+</html>

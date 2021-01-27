@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>Resize observer text test</title>
+	<style>
+		html {
+			height: 100%;
+			font-family: 'helvetica neue', arial, sans-serif;
+		}
+
+		body {
+			height: inherit;
+			margin: 0;
+		}
+
+		form {
+			width: 100%;
+		}
+
+		.control {
+			display: flex;
+			align-items: center;
+		}
+
+		.inner {
+			background-color: #333;
+			height: 2rem;
+			width: 5rem;
+			margin: 0 20px;
+			border: 20px solid #999;
+		}
+
+	</style>
+</head>
+
+<body>
+	<form>
+		<div class="control"><label for="border">Adjust border:</label><input id="border" type="range" value="20" min="10" max="70"></div>
+		<div class="control"><label for="type">Use border-box:</label><input id="type" type="checkbox" /></div>
+	</form>
+	<p>Change in width: <span id="result"></span></p>
+	<div class="inner"></div>
+	<script>
+		if (window.ResizeObserver) {
+			const divElem = document.querySelector('.inner');
+			const slider = document.querySelector('input[type="range"]');
+			const checkbox = document.querySelector('input[type="checkbox"]');
+			const result = document.querySelector('#result');
+			let resizeObserver;
+
+			slider.addEventListener('input', () => {
+				divElem.style.borderWidth = `${slider.value}px`;
+			})
+
+			const createResizeObserver = () => new ResizeObserver(entries => {
+				for (let entry of entries) {
+					entries.forEach((entry) => {
+						console.log('resize observer 02 event: ', entry);
+						const { borderBoxSize } = entry;
+						const { inlineSize } = (borderBoxSize[0] || borderBoxSize)
+						result.innerHTML = `${inlineSize}px`
+					})
+				}
+			});
+
+			resizeObserver = createResizeObserver()
+
+			resizeObserver.observe(divElem);
+
+			checkbox.addEventListener('change', () => {
+				resizeObserver.unobserve(divElem);
+				resizeObserver = createResizeObserver()
+				if (checkbox.checked) {
+					resizeObserver.observe(divElem, { box: 'border-box' });
+				} else {
+					resizeObserver.observe(divElem, { box: 'content-box' });
+				}
+			});
+
+		} else {
+			console.log('Resize observer not supported!');
+		}
+	</script>
+</body>
+
+</html>

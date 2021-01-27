@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Observers API in browsers</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="shower/themes/ribbon/styles/styles.css">
+    <style>
+        .shower {
+            --slide-ratio: calc(16 / 9);
+        }
+        p {
+            line-height: 1.33;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+        }
+        #code-block {
+            font-size: 18px;
+            line-height: 1.5;
+        }
+
+        #code-block i {
+            color: blue;
+        }
+
+        .color-gray, .code-comment{
+            color: #999;
+        }
+        .columns {
+            grid-column-gap: 1rem;
+        }
+        .example-iframe {
+            height: 200px;
+        }
+
+        .high {
+            height: 300px;
+        }
+    </style>
+</head>
+<body class="shower list">
+
+    <header class="caption">
+        <h1>Overview of browser's observers</h1>
+        <p>Taras Rodynenko</p>
+    </header>
+
+    <section class="slide">
+        <h2>Observers</h2>
+        <ul>
+            <li>Intersection observer</li>
+            <li>Resize observer</li>
+            <li>Mutation observer</li>
+            <li><em class="color-gray">Perfomance observer</em></li>
+        </ul>
+    </section>
+
+    <section class="slide">
+        <h2>Intersection observer</h2>
+        <p>Asynchronously observe changes in the intersection of a target element with an ancestor element or viewport.</p>
+        <pre><code id="code-block">
+const options = {
+    root: document.querySelector('#scrollArea'), <span class="code-comment">// null/undefined for viewport</span>
+    rootMargin: '0px', <span class="code-comment">// '10px 20px 30px 40px' (top, right, bottom, left)</span>
+    threshold: 1.0 <span class="code-comment">// [0, 0.5, 1]</span>
+}
+
+const observer = new IntersectionObserver(callback, options);
+observer.observe(target); <span class="code-comment">// turn on observation</span>
+observer.unobserve(target); <span class="code-comment">// turn off observation</span>
+observer.disconnnect(); <span class="code-comment">// turn off all observations</span>
+        </code></pre>
+    </section>
+
+    <section class="slide">
+        <h2>Intersection observer</h2>
+        <pre><code id="code-block">
+const callback = (entries, observer) => {
+    entries.forEach((entry) => {
+        // entry.target
+        // entry.boundingClientRect <span class="code-comment">// the same as getBoundingClientRect() </span>
+        // entry.intersectionRatio
+        // entry.isIntersecting
+        // entry.intersectionRect
+        // entry.rootBounds
+        // entry.time
+    })
+}
+            </code></pre>
+    </section>
+
+    <section class="slide">
+        <h2>Intersection observer (example)</h2>
+        <div class="columns two">
+            <pre><code id="code-block">
+const threshold = [0.05, 0.25, 0.5, 0.75, 1]
+const callback = (entries, observer) => {
+
+  entries.forEach((entry) => {
+    if (entry.intersectionRatio > 0.5) {
+        entry.target.textContent = 'Visited'
+    } else {
+        entry.target.textContent = 'Not visited'
+    }
+  });
+
+}
+            </code></pre>
+            <iframe src="example-io-01.html" class="example-iframe"></iframe>
+        </div>
+    </section>
+
+    <section class="slide">
+        <h2>Intersection observer (when to use)</h2>
+        <ul>
+            <li>Lazy-loading of images or other content</li>
+            <li>"infinite scrolling" websites</li>
+            <li>Reporting of visibility of advertisements etc</li>
+            <li>Start/pause video</li>
+        </ul>
+        <p>and more...</p>
+    </section>
+
+    <section class="slide">
+        <h2>Intersection observer (links)</h2>
+        <ul>
+            <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API" target="_blank">MDN</a></li>
+            <li><a href="https://www.w3.org/TR/intersection-observer/" target="_blank">W3C</a></li>
+            <li><a href="https://css-tricks.com/a-few-functional-uses-for-intersection-observer-to-know-when-an-element-is-in-view/" target="_blank">CSS tricks.com</a></li>
+        </ul>
+    </section>
+
+    <section class="slide">
+        <h2>Resize observer</h2>
+        <p>Asynchronously observe changes in the size of a target element. It is an Element's counterpart to <code>window.resize</code> event.</p>
+        <pre><code id="code-block">
+const options = {
+    box: 'content-box' <span class="code-comment">// 'border-box', 'device-pixel-content-box'</span>
+}
+const observer = new ResizeObserver(callback, options);
+
+observer.observe(targetElement); <span class="code-comment">// turn on observation for some element</span>
+observer.unobserve(targetElement); <span class="code-comment">// turn off observation</span>
+observer.disconnnect(); <span class="code-comment">// turn off all observations</span>
+            </code></pre>
+    </section>
+
+    <section class="slide">
+        <h2>Resize observer (conditions)</h2>
+        <ul>
+            <li>Observations will not be triggered by CSS transforms.</li>
+            <li>Observation will fire when watched Element <code>display</code> gets set to <code>none</code>.</li>
+            <li>Observation will fire when watched Element is inserted/removed from DOM.</li>
+        </ul>
+    </section>
+
+    <section class="slide">
+        <h2>Resize observer</h2>
+        <pre><code id="code-block">
+const callback = (entries) => {
+    entries.forEach((entry) => {
+        // entry.target
+        // entry.contentRect <span class="code-comment">// the same as getBoundingClientRect()</span>
+        // entry.borderBoxSize
+        // entry.contentBoxSize
+        // entry.devicePixelContentBoxSize
+    })
+}
+        </code></pre>
+    </section>
+
+    <section class="slide">
+        <h2>Resize observer (example #1)</h2>
+        <div class="columns two">
+            <pre><code id="code-block">
+const callback = (entries) => {
+  entries.forEach((entry) => {
+    const { contentBoxSize } = entry;
+    const { inlineSize, blockSize } =
+        (contentBoxSize[0] || contentBoxSize)
+    const colorStep = (inlineSize * 3) % 256;
+    entry.target.style.backgroundColor =
+    `rgb(${colorStep},${colorStep},${colorStep})`
+  })
+}
+            </code></pre>
+            <iframe class="example-iframe" src="example-ro-01.html"></iframe>
+        </div>
+    </section>
+
+    <section class="slide">
+        <h2>Resize observer (example #2)</h2>
+        <p>Difference between borderBox and contentBox</p>
+        <div class="columns two">
+            <pre><code id="code-block">
+const callback = (entries) => {
+  entries.forEach((entry) => {
+    const { borderBoxSize } = entry;
+    const { inlineSize } =
+        (borderBoxSize[0] || borderBoxSize)
+    result.innerHTML = `${inlineSize}px`
+  })
+}
+            </code></pre>
+            <iframe class="example-iframe" src="example-ro-02.html"></iframe>
+        </div>
+    </section>
+
+    <section class="slide">
+        <h2>Resize observer (when to use)</h2>
+        <ul>
+            <li>Control any element resize without layout reflow :)</li>
+        </ul>
+    </section>
+
+    <section class="slide">
+        <h2>Resize observer (links)</h2>
+        <ul>
+            <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Resize_Observer_API" target="_blank">MDN</a></li>
+            <li><a href="https://drafts.csswg.org/resize-observer/" target="_blank">CSS Working Group</a></li>
+            <li><a href="https://web.dev/resize-observer/" target="_blank">Web.dev</a></li>
+        </ul>
+    </section>
+
+    <section class="slide">
+        <h2>Mutation observer</h2>
+        <p>Asynchronously observe changes to the DOM tree.</p>
+        <pre><code id="code-block">
+const options = {
+    <span class="code-comment">// next slide</span>
+};
+
+const observer = new MutationObserver(callback);
+
+observer.observe(targetElement, options); <span class="code-comment">// turn on observation</span>
+observer.disconnnect(); <span class="code-comment">// turn off all observations</span>
+        </code></pre>
+    </section>
+
+    <section class="slide">
+        <h2>Mutation observer</h2>
+        <pre><code id="code-block">
+const options = {
+    childList: false,
+    attributes: true,
+    characterData: true, <span class="code-comment">// work just for Text nodes</span>
+    subtree: false,
+    attributeOldValue: false, <span class="code-comment">// return previous attribute value before mutation</span>
+    characterDataOldValue: false, <span class="code-comment">// return previous characterData value before mutation</span>
+    attributeFilter: [] <span class="code-comment">// attribute local names to observe if not all are needed</span>
+};
+
+observer.observe(targetElement, options);
+        </code></pre>
+    </section>
+
+    <section class="slide">
+        <h2>Mutation observer</h2>
+        <pre><code id="code-block">
+const callback = (mutations) => {
+    mutations.forEach((entry) => {
+        // entry.target
+        // entry.type <span class="code-comment">// 'childList', 'attributes'</span>
+        // entry.attributeName
+        // entry.oldValue
+        // entry.addedNodes
+        // entry.removeNodes
+        // entry.previousSibling
+        // entry.nextSibling
+    }
+}
+        </code></pre>
+    </section>
+
+    <section class="slide">
+        <h2>Mutation observer (example)</h2>
+        <div class="columns two">
+            <pre><code id="code-block">
+if (<i>type</i> === 'childList') {
+  if (<i>addedNodes</i>.length) childAmount += 1;
+  if (<i>removedNodes</i>.length) childAmount -= 1;
+} else if (<i>type</i> === 'attributes') {
+  if (<i>target</i>.getAttribute(<i>attributeName</i>)) {
+    <i>target</i>.style.outline =
+        `1px solid ${attributeName}`;
+  } else {
+    <i>target</i>.style.outline = '';
+  }
+}
+            </code></pre>
+            <iframe class="example-iframe high" src="example-mo-01.html"></iframe>
+        </div>
+
+    </section>
+
+    <section class="slide">
+        <h2>Mutation observer (when to use)</h2>
+        <ul>
+            <li>JS frameworks</li>
+            <li>Custom actions after framework manipulations</li>
+        </ul>
+
+    </section>
+
+    <section class="slide">
+        <h2>Mutation observer (links)</h2>
+        <ul>
+            <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver" target="_blank">MDN</a></li>
+            <li><a href="https://dom.spec.whatwg.org/#mutation-observers" target="_blank">DOM standard</a></li>
+            <li><a href="https://www.smashingmagazine.com/2019/04/mutationobserver-api-guide/" target="_blank">Smashing Magazine</a></li>
+            <li><a href="https://javascript.info/mutation-observer" target="_blank">Javascript.info</a></li>
+            <li><a href="https://hacks.mozilla.org/2012/05/dom-mutationobserver-reacting-to-dom-changes-without-killing-browser-performance/" target="_blank">Mozilla Hacks</a></li>
+        </ul>
+    </section>
+
+    <section class="slide">
+        <h2 style="height: 100%; margin: 0; display: flex; align-items: center;">Thanks 🙂</h2>
+    </section>
+
+    <footer class="badge">
+    </footer>
+
+    <div class="progress"></div>
+
+    <script src="shower/shower.js"></script>
+
+</body>
+</html>

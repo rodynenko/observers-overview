@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>Resize observer text test</title>
+	<style>
+		html {
+			height: 100%;
+			font-family: 'helvetica neue', arial, sans-serif;
+		}
+
+		body {
+			height: inherit;
+			margin: 0;
+		}
+
+		form {
+			width: 100%;
+		}
+
+		input[type="checkbox"] {
+			height: 2rem;
+		}
+
+		div {
+			height: 2rem;
+			width: 20px;
+		}
+	</style>
+</head>
+
+<body>
+	<form>
+		<label>Adjust width:</label><input type="range" value="40" min="20" max="72">
+	</form>
+	<p>Change background color on width change</p>
+	<div></div>
+	<script>
+		if (window.ResizeObserver) {
+			const divElem = document.querySelector('body > div');
+			const slider = document.querySelector('input[type="range"]');
+
+			slider.addEventListener('input', () => {
+				divElem.style.width = slider.value + 'px';
+			})
+
+			const resizeObserver = new ResizeObserver(entries => {
+				for (let entry of entries) {
+					entries.forEach((entry) => {
+						console.log('resize observer 01 event: ', entry);
+						const { contentBoxSize } = entry;
+						const inlineSize = contentBoxSize.inlineSize || contentBoxSize[0].inlineSize
+						const colorStep = (inlineSize * 3) % 256;
+						entry.target.style.backgroundColor =
+							`rgb(${colorStep},${colorStep},${colorStep})`
+					})
+				}
+			});
+
+			resizeObserver.observe(divElem);
+
+		} else {
+			console.log('Resize observer not supported!');
+		}
+	</script>
+</body>
+
+</html>
